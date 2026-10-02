@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>FundKenya – Admin</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:#f7f6f1;color:#1c2a24}
+header{background:#0a4f33;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:1.15rem}
+main{max-width:1100px;margin:20px auto;padding:0 16px}
+button,input{font:inherit}
+button{cursor:pointer;border:0;border-radius:8px;padding:7px 12px;background:#0e6b45;color:#fff}
+button.ghost{background:#ebe8db;color:#1c2a24}
+button.danger{background:#a3271d}
+button.tab[aria-pressed=true]{background:#1c2a24;color:#fff}
+#login{max-width:340px;margin:80px auto;background:#fff;border:1px solid #dcd9cd;border-radius:14px;padding:24px;display:grid;gap:12px}
+#login input{padding:10px 12px;border:1px solid #dcd9cd;border-radius:8px}
+.msg{color:#a3271d;min-height:1.2em;font-size:.9rem}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.box{background:#fff;border:1px solid #dcd9cd;border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:820px}
+th,td{text-align:left;padding:11px 13px;border-bottom:1px solid #ece9dc;vertical-align:top}
+th{background:#faf9f3;font-size:.9rem}
+tr:last-child td{border-bottom:0}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;font-weight:600;background:#ebe8db}
+.badge.pending{background:#fde7bd;color:#7a4b00}
+.badge.approved,.badge.confirmed{background:#d6efdc;color:#1d5a30}
+.badge.rejected{background:#f6d5d1;color:#7d1d14}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+details summary{cursor:pointer;color:#0e6b45}
+details p{white-space:pre-wrap;max-width:60ch;margin:8px 0}
+.empty{padding:26px;text-align:center;color:#5b6862}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <h2 style="margin:0">Admin sign in</h2>
+  <input type="password" id="pw" placeholder="Password" autocomplete="current-password">
+  <button id="loginBtn">Sign in</button>
+  <div class="msg" id="loginMsg" role="alert"></div>
+</div>
+
+<div id="app" hidden>
+  <header><h1>FundKenya admin</h1><button class="ghost" id="logout">Sign out</button></header>
+  <main>
+    <div class="tabs">
+      <button class="tab" id="tabDon" aria-pressed="true">Donations</button>
+      <button class="tab" id="tabCamp" aria-pressed="false">Campaigns</button>
+      <button class="ghost" id="refresh" style="margin-left:auto">Refresh</button>
+    </div>
+    <div class="box"><table><thead id="thead"></thead><tbody id="rows"></tbody></table><div class="empty" id="empty" hidden>Nothing to show.</div></div>
+  </main>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let view = "donations";
+
+async function api(url, opts = {}) {
+  const res = await fetch(url, { headers: { "Content-Type": "application/json" }, credentials: "same-origin", ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  if (res.status === 401 && !url.includes("login")) { showLogin(); throw new Error("auth"); }
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.error || "Request failed");
+  return json;
+}
+const kes = n => "KES " + Number(n).toLocaleString("en-KE");
+const when = s => new Date(s.replace(" ", "T") + "Z").toLocaleString();
+function td(...kids) { const e = document.createElement("td"); kids.forEach(k => e.append(k instanceof Node ? k : document.createTextNode(k))); return e; }
+function badge(s) { const b = document.createElement("span"); b.className = "badge " + s; b.textContent = s; return b; }
+function btn(label, cls, fn) { const b = document.createElement("button"); b.textContent = label; if (cls) b.className = cls; b.onclick = fn; return b; }
+function acts(...b) { const d = document.createElement("div"); d.className = "acts"; d.append(...b); return d; }
+function head(cols) { const tr = document.createElement("tr"); cols.forEach(c => { const th = document.createElement("th"); th.textContent = c; tr.append(th); }); $("#thead").replaceChildren(tr); }
+
+async function load() {
+  const rows = $("#rows"); rows.replaceChildren();
+  try {
+    if (view === "donations") {
+      head(["Received", "Donor", "Campaign", "Amount", "M-Pesa code", "Status", ""]);
+      const list = await api("/api/admin/donations");
+      $("#empty").hidden = list.length > 0;
+      list.forEach(d => {
+        const tr = document.createElement("tr");
+        const set = s => async () => { await api("/api/admin/donations/" + d.id, { method: "PATCH", body: { status: s } }); load(); };
+        tr.append(td(when(d.created_at)), td(d.donor_name + (d.anonymous ? " (hidden)" : "")), td("#" + d.campaign_id + " " + d.campaign_title),
+          td(kes(d.amount)), td(d.mpesa_code), td(badge(d.status)),
+          td(acts(...(d.status === "pending"
+            ? [btn("Confirm", "", set("confirmed")), btn("Reject", "danger", set("rejected"))]
+            : [btn("Back to pending", "ghost", set("pending"))]))));
+        rows.append(tr);
+      });
+    } else {
+      head(["Submitted", "Campaign", "Organiser", "Raised / goal", "Status", ""]);
+      const list = await api("/api/admin/campaigns");
+      $("#empty").hidden = list.length > 0;
+      list.forEach(c => {
+        const tr = document.createElement("tr");
+        const set = s => async () => { await api("/api/admin/campaigns/" + c.id, { method: "PATCH", body: { status: s } }); load(); };
+        const det = document.createElement("details");
+        const sum = document.createElement("summary"); sum.textContent = "#" + c.id + " " + c.title;
+        const p = document.createElement("p"); p.textContent = c.story;
+        det.append(sum, p);
+        const who = td(c.organizer, document.createElement("br"), c.contact);
+        const actions = c.status === "pending" ? [btn("Approve", "", set("approved")), btn("Reject", "danger", set("rejected"))]
+          : c.status === "approved" ? [btn("Close", "ghost", set("closed"))]
+          : [btn("Reopen", "ghost", set("approved"))];
+        tr.append(td(when(c.created_at)), td(det), who, td(kes(c.raised) + " / " + kes(c.goal)), td(badge(c.status)), td(acts(...actions)));
+        rows.append(tr);
+      });
+    }
+  } catch (e) { if (e.message !== "auth") alert(e.message); }
+}
+
+function setView(v) {
+  view = v;
+  $("#tabDon").setAttribute("aria-pressed", v === "donations");
+  $("#tabCamp").setAttribute("aria-pressed", v === "campaigns");
+  load();
+}
+function showLogin() { $("#app").hidden = true; $("#login").hidden = false; $("#pw").focus(); }
+function showApp() { $("#login").hidden = true; $("#app").hidden = false; load(); }
+
+async function login() {
+  $("#loginMsg").textContent = "";
+  try { await api("/api/admin/login", { method: "POST", body: { password: $("#pw").value } }); $("#pw").value = ""; showApp(); }
+  catch (e) { $("#loginMsg").textContent = e.message; }
+}
+$("#loginBtn").onclick = login;
+$("#pw").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+$("#logout").onclick = async () => { await api("/api/admin/logout", { method: "POST" }); showLogin(); };
+$("#tabDon").onclick = () => setView("donations");
+$("#tabCamp").onclick = () => setView("campaigns");
+$("#refresh").onclick = load;
+
+api("/api/admin/campaigns").then(() => showApp()).catch(showLogin);
+</script>
+</body>
+</html>

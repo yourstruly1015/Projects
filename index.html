@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stay Kenya – Hotels from the coast to the Mara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#13252b; --ink:#1b2a2f; --paper:#f6f3ee; --card:#ffffff;
+  --sun:#f2a922; --coast:#1f8a8a; --mara:#c97a1f; --nbo:#2f6b4f; --mtk:#4b5f86;
+  --muted:#5d6b70; --line:#dcd7cd;
+  --head:"Bricolage Grotesque","Trebuchet MS",sans-serif;
+  --body:"Figtree","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--paper);color:var(--ink);line-height:1.55}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.wrap{width:min(1120px,92%);margin-inline:auto}
+
+/* header */
+header.top{position:absolute;inset:0 0 auto 0;z-index:2}
+header.top .wrap{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+.logo{font-family:var(--head);font-weight:800;font-size:1.4rem;color:#fff;text-decoration:none}
+nav a{color:#e9e5da;text-decoration:none;margin-left:22px;font-weight:500}
+nav a:hover{color:var(--sun)}
+
+/* hero */
+.hero{position:relative;background:linear-gradient(180deg,#13252b 0%,#2b3f4a 38%,#c9773a 78%,#f2a922 100%);color:#fff;padding:150px 0 170px;overflow:hidden}
+.hero h1{font-family:var(--head);font-weight:800;font-size:clamp(2.4rem,6.5vw,4.8rem);line-height:1.02;max-width:12ch;letter-spacing:-.02em}
+.hero p{max-width:46ch;margin-top:18px;font-size:1.15rem;color:#f0ebe0}
+.hero .cta{display:inline-block;margin-top:28px;background:var(--sun);color:#1b1405;font-weight:700;padding:14px 26px;border-radius:999px;text-decoration:none}
+.hero .cta:hover{background:#ffc04a}
+.horizon{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:150px}
+
+/* filters */
+.tools{margin-top:-46px;position:relative;z-index:3}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:14px;box-shadow:0 8px 30px rgba(19,37,43,.12)}
+.panel .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+input[type=search],select,.f input,.f select{font:inherit;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+input[type=search]{flex:1 1 240px}
+.chip{font:inherit;font-weight:600;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+.chip[aria-pressed=true]{background:var(--night);color:#fff;border-color:var(--night)}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;margin:34px 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.art{height:150px;position:relative}
+.art::after{content:"";position:absolute;right:26px;top:24px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.85)}
+.r-Nairobi{background:linear-gradient(160deg,#2f6b4f,#9bc59b)}
+.r-Coast{background:linear-gradient(160deg,#1f8a8a,#8fd3cf)}
+.r-Rift{background:linear-gradient(160deg,#c97a1f,#f2c46a)}
+.r-Mtk{background:linear-gradient(160deg,#4b5f86,#a9b8d6)}
+.body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.body h3{font-family:var(--head);font-size:1.3rem;line-height:1.2}
+.place{color:var(--muted);font-size:.95rem}
+.avail{color:var(--muted);font-size:.95rem;margin-top:6px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:.8rem;background:#efece4;border-radius:6px;padding:3px 8px}
+.tier{margin-left:auto;font-weight:700;font-size:.85rem;color:var(--mara)}
+.body .top-row{display:flex;align-items:baseline;gap:8px}
+.btn{font:inherit;font-weight:600;cursor:pointer;border:0;border-radius:10px;padding:11px 16px;background:var(--night);color:#fff;margin-top:auto}
+.btn:hover{background:#21414a}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0}
+
+/* about + footer */
+.about{padding:60px 0;border-top:1px solid var(--line)}
+.about h2{font-family:var(--head);font-size:2rem;margin-bottom:12px}
+.about p{max-width:62ch;color:#33444a}
+footer{background:var(--night);color:#cfd6d6;padding:30px 0;font-size:.95rem}
+
+/* dialog */
+dialog{border:0;border-radius:16px;padding:0;width:min(520px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(19,37,43,.6)}
+dialog[open]{animation:pop .18s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.d-head{padding:22px 22px 10px}
+.d-head h2{font-family:var(--head);font-size:1.5rem}
+.d-head p{color:var(--muted)}
+.f{display:grid;gap:12px;padding:10px 22px 22px}
+.f label{display:grid;gap:4px;font-weight:600;font-size:.92rem}
+.f .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.btn.ghost{background:#efece4;color:var(--ink);margin-top:0}
+.btn.go{background:var(--sun);color:#1b1405;margin-top:0}
+.err{color:#a3271d;font-size:.9rem;min-height:1.2em}
+
+@media (max-width:560px){nav{display:none}.f .two{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#">Stay Kenya</a>
+    <nav><a href="#hotels">Hotels</a><a href="#about">About</a></nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Where will you sleep in Kenya?</h1>
+    <p>Find a hotel in Nairobi, on the Indian Ocean coast, in the Rift Valley, at the Maasai Mara or on the slopes of Mount Kenya.</p>
+    <a class="cta" href="#hotels">Browse hotels</a>
+  </div>
+  <svg class="horizon" viewBox="0 0 1200 150" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 150V110C120 90 240 100 360 112S600 96 720 104 960 118 1200 96V150Z" fill="#13252b" opacity=".55"/>
+    <path d="M0 150V128C200 118 360 130 560 124S900 112 1200 126V150Z" fill="#13252b"/>
+    <!-- acacia tree -->
+    <g fill="#13252b">
+      <rect x="878" y="70" width="6" height="60"/>
+      <ellipse cx="881" cy="66" rx="58" ry="12"/>
+      <ellipse cx="850" cy="74" rx="30" ry="7"/>
+      <ellipse cx="915" cy="72" rx="28" ry="7"/>
+    </g>
+  </svg>
+</section>
+
+<main class="wrap" id="hotels">
+  <div class="tools">
+    <div class="panel">
+      <div class="row">
+        <input type="search" id="q" placeholder="Search by hotel or town" aria-label="Search hotels">
+        <select id="tier" aria-label="Price level">
+          <option value="">Any price level</option>
+          <option>Mid-range</option>
+          <option>Upscale</option>
+          <option>Luxury</option>
+        </select>
+      </div>
+      <div class="row" id="regions" role="group" aria-label="Filter by region"></div>
+    </div>
+  </div>
+  <div class="grid" id="grid" aria-live="polite"></div>
+</main>
+
+<section class="about wrap" id="about">
+  <h2>About this site</h2>
+  <p>Stay Kenya lists hotels across the country so you can compare locations and send an enquiry in one place. Hotel details on this page are sample content: check rates, availability and amenities with each hotel before you travel.</p>
+</section>
+
+<footer>
+  <div class="wrap">© <span id="yr"></span> Stay Kenya. Hotel names belong to their owners.</div>
+</footer>
+
+<dialog id="dlg">
+  <div class="d-head">
+    <h2 id="d-name"></h2>
+    <p id="d-place"></p>
+  </div>
+  <form class="f" id="enq" method="dialog" novalidate>
+    <label>Your name<input name="name" required autocomplete="name"></label>
+    <div class="two">
+      <label>Check in<input type="date" name="in" required></label>
+      <label>Check out<input type="date" name="out" required></label>
+    </div>
+    <label>Guests<input type="number" name="guests" min="1" max="12" value="2" required></label>
+    <div class="err" id="err" role="alert"></div>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="cancel">Cancel</button>
+      <button type="submit" class="btn go">Send enquiry</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+// ---- Edit these ----
+const ENQUIRY_EMAIL = "bookings@example.co.ke"; // where enquiries are sent
+const REGIONS = {Nairobi:"r-Nairobi", Coast:"r-Coast", "Rift Valley & Mara":"r-Rift", "Mount Kenya":"r-Mtk"};
+
+// Sample data: verify details with each hotel before publishing.
+// Add rooms inventory for each hotel
+const HOTELS = [
+  {name:"Hemingways Nairobi", place:"Karen, Nairobi", region:"Nairobi", tier:"Luxury", tags:["Spa","Garden","Fine dining"], rooms:{total:12}},
+  {name:"Giraffe Manor", place:"Langata, Nairobi", region:"Nairobi", tier:"Luxury", tags:["Giraffes at breakfast","Boutique"], rooms:{total:6}},
+  {name:"Villa Rosa Kempinski", place:"Westlands, Nairobi", region:"Nairobi", tier:"Luxury", tags:["City views","Pool","Spa"], rooms:{total:20}},
+  {name:"Sarova Whitesands Beach Resort", place:"Bamburi, Mombasa", region:"Coast", tier:"Upscale", tags:["Beachfront","Family friendly","Pool"], rooms:{total:30}},
+  {name:"Serena Beach Resort & Spa", place:"Shanzu, Mombasa", region:"Coast", tier:"Upscale", tags:["Swahili design","Spa","Beach"], rooms:{total:18}},
+  {name:"Diani Reef Beach Resort", place:"Diani Beach", region:"Coast", tier:"Upscale", tags:["Beachfront","Water sports"], rooms:{total:22}},
+  {name:"Mara Serena Safari Lodge", place:"Maasai Mara", region:"Rift Valley & Mara", tier:"Luxury", tags:["Game drives","Hilltop views"], rooms:{total:14}},
+  {name:"Sarova Lion Hill Game Lodge", place:"Lake Nakuru", region:"Rift Valley & Mara", tier:"Mid-range", tags:["Flamingos","Game drives"], rooms:{total:10}},
+  {name:"Lake Naivasha Sopa Resort", place:"Naivasha", region:"Rift Valley & Mara", tier:"Mid-range", tags:["Lakeside","Boat rides"], rooms:{total:16}},
+  {name:"Fairmont Mount Kenya Safari Club", place:"Nanyuki", region:"Mount Kenya", tier:"Luxury", tags:["Mountain views","Golf","Heritage"], rooms:{total:8}}
+];
+
+function initInventory(){
+  try{
+    const existing = JSON.parse(localStorage.getItem('inventory')||'null');
+    if(!existing){
+      const map = {};
+      HOTELS.forEach(h=> map[h.name] = {total: h.rooms.total, booked:0});
+      localStorage.setItem('inventory', JSON.stringify(map));
+    }
+  }catch(e){ console.error(e); }
+}
+function getInventory(){ try{ return JSON.parse(localStorage.getItem('inventory')||'{}'); }catch(e){ return {}; } }
+function setInventory(inv){ localStorage.setItem('inventory', JSON.stringify(inv)); }
+function updateInventory(hotelName, delta){ const inv = getInventory(); if(!inv[hotelName]) return false; const newBooked = (inv[hotelName].booked||0) + delta; if(newBooked < 0 || newBooked > (inv[hotelName].total||0)) return false; inv[hotelName].booked = newBooked; setInventory(inv); return true; }
+initInventory();
+
+const $ = s => document.querySelector(s);
+const grid = $("#grid"), q = $("#q"), tier = $("#tier"), regionsEl = $("#regions");
+let region = "All";
+
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e; }
+
+function buildChips(){
+  ["All", ...Object.keys(REGIONS)].forEach(r=>{
+    const b = el("button","chip",r);
+    b.type="button"; b.setAttribute("aria-pressed", r===region);
+    b.onclick = ()=>{ region=r; [...regionsEl.children].forEach(c=>c.setAttribute("aria-pressed", c===b)); render(); };
+    regionsEl.appendChild(b);
+  });
+}
+
+function render(){
+  const term = q.value.trim().toLowerCase();
+  const list = HOTELS.filter(h =>
+    (region==="All" || h.region===region) &&
+    (!tier.value || h.tier===tier.value) &&
+    (!term || (h.name+" "+h.place).toLowerCase().includes(term))
+  );
+  grid.replaceChildren();
+  if(!list.length){ grid.appendChild(el("p","empty","No hotels match. Clear a filter or try a different search.")); return; }
+  list.forEach(h=>{
+    const card = el("article","card");
+    card.appendChild(el("div","art "+REGIONS[h.region]));
+    const body = el("div","body");
+    const top = el("div","top-row");
+    top.append(el("h3","",h.name), el("span","tier",h.tier));
+    const tags = el("div","tags"); h.tags.forEach(t=>tags.appendChild(el("span","",t)));
+    const inv = getInventory();
+    const hotelInv = inv[h.name] || {total: h.rooms?.total || 0, booked: 0};
+    const avail = Math.max(0, (hotelInv.total||0) - (hotelInv.booked||0));
+    const btn = el("button","btn","Send enquiry"); btn.type="button"; btn.onclick=()=>openDialog(h);
+    body.append(top, el("div","place",h.place+" · "+h.region), tags, el('div','avail',`Rooms: ${avail} available (${hotelInv.booked||0} booked)`), btn);
+    card.appendChild(body); grid.appendChild(card);
+  });
+}
+
+// ---- Enquiry dialog ----
+const dlg = $("#dlg"), form = $("#enq"), err = $("#err");
+let current = null;
+function openDialog(h){
+  current = h; $("#d-name").textContent = h.name; $("#d-place").textContent = h.place;
+  err.textContent = ""; const today = new Date().toISOString().slice(0,10);
+  form.in.min = today; form.out.min = today;
+  dlg.showModal(); form.name.focus();
+}
+$("#cancel").onclick = ()=>dlg.close();
+form.addEventListener("submit", e=>{
+  e.preventDefault();
+  const d = new FormData(form);
+  if(!d.get("name").trim()){ err.textContent="Enter your name."; return; }
+  if(!d.get("in") || !d.get("out")){ err.textContent="Choose check-in and check-out dates."; return; }
+  if(d.get("out") <= d.get("in")){ err.textContent="Check-out must be after check-in."; return; }
+  const subject = "Booking enquiry: "+current.name;
+  const body = `Hotel: ${current.name} (${current.place})\nName: ${d.get("name")}\nCheck in: ${d.get("in")}\nCheck out: ${d.get("out")}\nGuests: ${d.get("guests")}`;
+  window.location.href = `mailto:${ENQUIRY_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  dlg.close(); form.reset();
+});
+
+q.addEventListener("input", render); tier.addEventListener("change", render);
+$("#yr").textContent = new Date().getFullYear();
+buildChips(); render();
+</script>
+</body>
+</html>

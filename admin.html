@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stay Kenya — Admin: Enquiries</title>
+<style>
+:root{--night:#13252b;--ink:#1b2a2f;--paper:#f6f3ee;--muted:#5d6b70;--line:#dcd7cd}
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,Segoe UI,Arial,sans-serif;background:var(--paper);color:var(--ink);padding:28px}
+.wrap{max-width:980px;margin-inline:auto}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.h1{font-weight:800}
+.controls{display:flex;gap:8px}
+.input,select{padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.table{width:100%;border-collapse:collapse;margin-top:14px}
+.table th, .table td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:0.95rem}
+.toolbar{display:flex;gap:8px;margin-top:12px}
+.btn{background:var(--night);color:#fff;padding:8px 12px;border-radius:8px;border:0;cursor:pointer}
+.empty{color:var(--muted);padding:24px;text-align:center}
+.small{font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <div class="h1">Enquiries</div>
+        <div class="small">Stored locally in browser localStorage</div>
+      </div>
+      <div class="controls">
+        <input id="q" class="input" placeholder="Search name, hotel, place" aria-label="Search enquiries">
+        <select id="filterHotel" class="input"><option value="">All hotels</option></select>
+        <button id="export" class="btn">Export CSV</button>
+        <button id="clear" class="btn">Clear all</button>
+      </div>
+    </div>
+
+    <table class="table" id="table" aria-live="polite">
+      <thead><tr><th>Time</th><th>Hotel</th><th>Place</th><th>Name</th><th>Phone</th><th>Check in</th><th>Check out</th><th>Guests</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty" hidden>No enquiries yet.</div>
+    <h3 style="margin-top:18px">Inventory</h3>
+    <table class="table" id="invTable">
+      <thead><tr><th>Hotel</th><th>Total</th><th>Booked</th><th>Available</th></tr></thead>
+      <tbody id="invBody"></tbody>
+    </table>
+  </div>
+
+<script>
+const tbody = document.getElementById('tbody');
+const q = document.getElementById('q');
+const filterHotel = document.getElementById('filterHotel');
+const exportBtn = document.getElementById('export');
+const clearBtn = document.getElementById('clear');
+const invBody = document.getElementById('invBody');
+
+function saveEnquiries(list){ localStorage.setItem('enquiries', JSON.stringify(list)); }
+function getInventory(){ try{return JSON.parse(localStorage.getItem('inventory')||'{}')}catch(e){return{}} }
+function setInventory(inv){ localStorage.setItem('inventory', JSON.stringify(inv)); }
+function changeInventory(hotel, delta){ const inv = getInventory(); if(!inv[hotel]) return false; if((inv[hotel].booked||0)+delta < 0) return false; if((inv[hotel].booked||0)+delta > (inv[hotel].total||0)) return false; inv[hotel].booked = (inv[hotel].booked||0)+delta; setInventory(inv); return true; }
+const empty = document.getElementById('empty');
+
+function loadEnquiries(){
+  try{ return JSON.parse(localStorage.getItem('enquiries')||'[]'); }catch(e){ return []; }
+}
+
+function render(){
+  const list = loadEnquiries();
+  const term = q.value.trim().toLowerCase();
+  const hotelFilter = filterHotel.value;
+  const filtered = list.filter(e=>{
+    if(hotelFilter && e.hotel!==hotelFilter) return false;
+    if(!term) return true;
+    return [e.hotel,e.name,e.place].join(' ').toLowerCase().includes(term);
+  }).slice().reverse();
+
+  tbody.innerHTML = '';
+  if(!filtered.length){ empty.hidden = false; return; } else { empty.hidden = true; }
+  filtered.forEach(e=>{
+    const tr = document.createElement('tr');
+    const status = e.status || 'pending';
+    tr.innerHTML = `<td>${new Date(e.created).toLocaleString()}</td>
+      <td>${escapeHtml(e.hotel)}</td>
+      <td>${escapeHtml(e.place)}</td>
+      <td>${escapeHtml(e.name)}</td>
+      <td>${escapeHtml(e.phone||'')}</td>
+      <td>${escapeHtml(e.checkIn)}</td>
+      <td>${escapeHtml(e.checkOut)}</td>
+      <td>${escapeHtml(e.guests)}</td>
+      <td>${escapeHtml(status)}</td>
+      <td>
+        ${status==='pending'? `<button data-id="${e.id}" class="btn-approve">Approve</button> <button data-id="${e.id}" class="btn-reject">Reject</button>`: ''}
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function populateHotels(){
+  const list = loadEnquiries();
+  const hotels = Array.from(new Set(list.map(e=>e.hotel))).sort();
+  filterHotel.innerHTML = '<option value="">All hotels</option>' + hotels.map(h=>`<option>${escapeHtml(h)}</option>`).join('');
+}
+
+function renderInventory(){
+  const inv = (()=>{try{return JSON.parse(localStorage.getItem('inventory')||'{}')}catch(e){return {}}})();
+  const body = document.getElementById('invBody'); body.innerHTML='';
+  const names = Object.keys(inv);
+  if(!names.length){ body.innerHTML='<tr><td colspan="4" class="empty">No inventory set.</td></tr>'; return }
+  names.forEach(n=>{
+    const v = inv[n];
+    const tr = document.createElement('tr');
+    const avail = (v.total||0) - (v.booked||0);
+    tr.innerHTML = `<td>${escapeHtml(n)}</td><td>${v.total||0}</td><td>${v.booked||0}</td><td>${avail}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+q.addEventListener('input', render);
+filterHotel.addEventListener('change', render);
+
+// delegate approve/reject clicks
+tbody.addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('button'); if(!btn) return;
+  const id = btn.getAttribute('data-id'); if(!id) return;
+  const list = loadEnquiries();
+  const idx = list.findIndex(x=>x.id==id); if(idx<0) return;
+  const item = list[idx];
+  if(btn.classList.contains('btn-approve')){
+    // try to allocate room
+    const ok = changeInventory(item.hotel, 1);
+    if(!ok){ alert('No rooms available to approve this booking.'); return; }
+    list[idx].status = 'confirmed';
+    saveEnquiries(list); render(); renderInventory(); populateHotels();
+    return;
+  }
+  if(btn.classList.contains('btn-reject')){
+    list[idx].status = 'rejected';
+    saveEnquiries(list); render(); populateHotels();
+    return;
+  }
+});
+
+exportBtn.addEventListener('click', ()=>{
+  const list = loadEnquiries();
+  if(!list.length) return alert('No enquiries to export');
+  const csv = ['Time,Hotel,Place,Name,Phone,Check in,Check out,Guests,Status'].concat(
+    list.map(e=>`${escapeCsv(new Date(e.created).toLocaleString())},${escapeCsv(e.hotel)},${escapeCsv(e.place)},${escapeCsv(e.name)},${escapeCsv(e.phone||'')},${escapeCsv(e.checkIn)},${escapeCsv(e.checkOut)},${escapeCsv(e.guests)},${escapeCsv(e.status||'pending')}`)
+  ).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'enquiries.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+clearBtn.addEventListener('click', ()=>{
+  if(!confirm('Clear all stored enquiries?')) return;
+  localStorage.removeItem('enquiries'); render(); populateHotels();
+});
+
+function escapeCsv(s){ if(s==null) return ''; return '"'+String(s).replace(/"/g,'""')+'"'; }
+
+// initial
+populateHotels(); render(); renderInventory();
+
+// update hotels list and inventory when storage changes (other tabs)
+window.addEventListener('storage', ()=>{ populateHotels(); render(); renderInventory(); });
+</script>
+</body>
+</html>
